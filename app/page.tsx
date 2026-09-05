@@ -1,98 +1,96 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-interface Package {
-  id: number;
-  name: string;
-  price: number;
-  description: string;
-  image: string | null;
-}
+// Product list (Replace packageId with your actual ID from Tebex Control Panel)
+const PRODUCTS = [
+  {
+    id: 1,
+    packageId: 1234567, // REPLACE THIS WITH YOUR TEBEX PACKAGE ID
+    name: 'avenixDumpster',
+    price: '€10.00',
+    description:
+      'avenixDumpster is an advanced dumpster and trash bin diving script. Players can search through containers to find materials, custom items, and extra loot.',
+    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
+  },
+];
 
 export default function Home() {
-  const [packages, setPackages] = useState<Package[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingId, setLoadingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    async function fetchPackages() {
-      try {
-        const publicToken = process.env.NEXT_PUBLIC_TEBEX_PUBLIC_TOKEN;
-        const res = await fetch(`https://headless.tebex.io/api/accounts/${publicToken}/packages`);
-        const data = await res.json();
-        setPackages(data.data || []);
-      } catch (err) {
-        console.error('Greška pri učitavanju paketa:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchPackages();
-  }, []);
-
-  const handleBuy = async (packageId: number) => {
+  const handleBuy = async (productId: number, packageId: number) => {
+    setLoadingId(productId);
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ packageId }),
       });
+
       const data = await res.json();
+
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        alert('Failed to process checkout. Please check server logs and configuration.');
       }
     } catch (err) {
-      alert('Došlo je do greške pri pokretanju kupovine.');
+      console.error(err);
+      alert('A server error occurred while creating the checkout session.');
+    } finally {
+      setLoadingId(null);
     }
   };
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white px-8 py-16">
-      <div className="max-w-6xl mx-auto text-center mb-16">
-        <h1 className="text-5xl font-extrabold tracking-tight text-indigo-500 mb-4">
-          AVENIX STORE
+    <main className="min-h-screen bg-black text-white px-6 py-12 flex flex-col items-center">
+      {/* Header Section */}
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-extrabold tracking-wide text-indigo-500 uppercase">
+          Avenix Store
         </h1>
-        <p className="text-neutral-400 text-lg">
-          Ekskluzivne FiveM skripte i resursi za tvoj server.
+        <p className="text-gray-400 mt-2 text-lg">
+          Exclusive FiveM scripts and resources for your server.
         </p>
       </div>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        {loading ? (
-          <p className="text-center col-span-3 text-neutral-500">Učitavanje skripti...</p>
-        ) : packages.length === 0 ? (
-          <p className="text-center col-span-3 text-neutral-500">Trenutno nema dostupnih paketa u Tebex panelu.</p>
-        ) : (
-          packages.map((pkg) => (
-            <div 
-              key={pkg.id} 
-              className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 flex flex-col justify-between hover:border-indigo-500 transition duration-300"
-            >
-              <div>
-                {pkg.image && (
-                  <img src={pkg.image} alt={pkg.name} className="w-full h-48 object-cover rounded-xl mb-4" />
-                )}
-                <h2 className="text-2xl font-bold mb-2">{pkg.name}</h2>
-                <div 
-                  className="text-neutral-400 text-sm mb-6 line-clamp-3" 
-                  dangerouslySetInnerHTML={{ __html: pkg.description }} 
-                />
-              </div>
-
-              <div>
-                <div className="text-3xl font-extrabold text-white mb-4">
-                  €{pkg.price}
-                </div>
-                <button
-                  onClick={() => handleBuy(pkg.id)}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition duration-200"
-                >
-                  Kupi Odmah
-                </button>
+      {/* Product Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+        {PRODUCTS.map((product) => (
+          <div
+            key={product.id}
+            className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-lg flex flex-col justify-between hover:border-zinc-700 transition-all"
+          >
+            <div>
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-5">
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {product.name}
+                </h2>
+                <p className="text-gray-400 text-sm mb-4">
+                  {product.description}
+                </p>
               </div>
             </div>
-          ))
-        )}
+
+            <div className="p-5 pt-0">
+              <span className="text-xl font-semibold text-white block mb-4">
+                {product.price}
+              </span>
+              <button
+                onClick={() => handleBuy(product.id, product.packageId)}
+                disabled={loadingId === product.id}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white font-semibold py-3 rounded-lg transition-all text-center cursor-pointer disabled:cursor-not-allowed"
+              >
+                {loadingId === product.id ? 'Processing...' : 'Buy Now'}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </main>
   );
