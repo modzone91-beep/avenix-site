@@ -6,9 +6,9 @@ import { useState } from 'react';
 const PRODUCTS = [
   {
     id: 1,
-    packageId: 1234567, // REPLACE THIS WITH YOUR TEBEX PACKAGE ID
+    packageId: 7657617, // REPLACE THIS WITH YOUR TEBEX PACKAGE ID
     name: 'avenixDumpster',
-    price: '€10.00',
+    price: '€0',
     description:
       'avenixDumpster is an advanced dumpster and trash bin diving script. Players can search through containers to find materials, custom items, and extra loot.',
     image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
